@@ -1,0 +1,214 @@
+1. O que é SQL?
+SQL (Structured Query Language) é a linguagem padrão para gerenciar bancos de dados relacionais, como o MySQL. Serve para criar, alterar, consultar e administrar dados, usada desde os anos 1970 e padronizada pelo ANSI. Este guia explica todos os comandos com detalhes e exemplos.
+
+2. Categorias de Comandos SQL
+- DDL (Data Definition Language): Define a estrutura (bancos, tabelas, índices).
+- DML (Data Manipulation Language): Manipula os dados (inserir, atualizar, deletar).
+- DQL (Data Query Language): Consulta os dados (SELECT).
+- DCL (Data Control Language): Controla permissões (GRANT, REVOKE).
+- TCL (Transaction Control Language): Gerencia transações (COMMIT, ROLLBACK).
+
+3. Comandos SQL - Explicação Completa
+
+3.1. DDL - Definindo a Estrutura
+- CREATE DATABASE: Cria um novo banco de dados.
+  Sintaxe: CREATE DATABASE nome_banco;
+  Exemplo: CREATE DATABASE loja;
+  Detalhe: Cria um espaço isolado para armazenar tabelas. Usa-se "IF NOT EXISTS" para evitar erros se o banco já existir: CREATE DATABASE IF NOT EXISTS loja;
+
+- USE: Seleciona o banco ativo.
+  Sintaxe: USE nome_banco;
+  Exemplo: USE loja;
+  Detalhe: Todos os comandos seguintes afetam o banco escolhido.
+
+- DROP DATABASE: Deleta um banco de dados e tudo dentro dele.
+  Sintaxe: DROP DATABASE nome_banco;
+  Exemplo: DROP DATABASE loja;
+  Detalhe: Perigoso! Remove permanentemente. Use "IF EXISTS" para segurança: DROP DATABASE IF EXISTS loja;
+
+- CREATE TABLE: Cria uma nova tabela no banco ativo.
+  Sintaxe: CREATE TABLE nome_tabela (coluna tipo [restrições], ...);
+  Exemplo: 
+    CREATE TABLE clientes (
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      nome VARCHAR(100) NOT NULL,
+      idade INT DEFAULT 18,
+      email VARCHAR(100) UNIQUE
+    );
+  Detalhe: 
+    - PRIMARY KEY: Chave única por linha.
+    - AUTO_INCREMENT: Gera IDs automáticos (1, 2, 3...).
+    - NOT NULL: Campo obrigatório.
+    - DEFAULT: Valor padrão se não especificado.
+    - UNIQUE: Proíbe duplicatas na coluna.
+
+- ALTER TABLE: Modifica uma tabela existente.
+  Sintaxe: ALTER TABLE nome_tabela ação;
+  Exemplos:
+    - Adicionar coluna: ALTER TABLE clientes ADD COLUMN cidade VARCHAR(50);
+    - Modificar tipo: ALTER TABLE clientes MODIFY COLUMN idade SMALLINT;
+    - Renomear coluna: ALTER TABLE clientes RENAME COLUMN email TO correo;
+    - Deletar coluna: ALTER TABLE clientes DROP COLUMN cidade;
+  Detalhe: Permite ajustes na estrutura sem perder dados (exceto DROP).
+
+- DROP TABLE: Deleta uma tabela e seus dados.
+  Sintaxe: DROP TABLE nome_tabela;
+  Exemplo: DROP TABLE clientes;
+  Detalhe: Use "IF EXISTS" para evitar erros: DROP TABLE IF EXISTS clientes;
+
+- CREATE INDEX: Cria um índice para acelerar consultas.
+  Sintaxe: CREATE INDEX nome_indice ON nome_tabela (coluna);
+  Exemplo: CREATE INDEX idx_nome ON clientes (nome);
+  Detalhe: Melhora SELECT/WHERE, mas pode slowing INSERT/UPDATE.
+
+- DROP INDEX: Remove um índice.
+  Sintaxe: DROP INDEX nome_indice ON nome_tabela;
+  Exemplo: DROP INDEX idx_nome ON clientes;
+  Detalhe: Restaura velocidade de escrita, mas pode rallentir consultas.
+
+3.2. DML - Manipulando Dados
+- INSERT INTO: Adiciona novos registros a uma tabela.
+  Sintaxe: INSERT INTO nome_tabela (colunas) VALUES (valores);
+  Exemplos:
+    - Simples: INSERT INTO clientes (nome, idade, email) VALUES ('João', 25, 'joao@email.com');
+    - Múltiplos: INSERT INTO clientes (nome, idade) VALUES ('Maria', 30), ('Pedro', 22);
+  Detalhe: Colunas podem ser omitidas se todos os valores forem fornecidos na ordem da tabela.
+
+- UPDATE: Altera dados existentes.
+  Sintaxe: UPDATE nome_tabela SET coluna = valor WHERE condição;
+  Exemplo: UPDATE clientes SET idade = 26 WHERE nome = 'João';
+  Detalhe: Sem WHERE, atualiza TODAS as linhas! Use com cuidado.
+
+- DELETE: Remove registros.
+  Sintaxe: DELETE FROM nome_tabela WHERE condição;
+  Exemplo: DELETE FROM clientes WHERE idade < 20;
+  Detalhe: Sem WHERE, deleta tudo! Pode ser revertido com ROLLBACK se em transação.
+
+3.3. DQL - Consultando Dados
+- SELECT: Recupera dados de uma ou mais tabelas.
+  Sintaxe: SELECT colunas FROM nome_tabela [WHERE condição] [ORDER BY coluna] [LIMIT n];
+  Exemplos:
+    - Básico: SELECT * FROM clientes; -- Todas as colunas
+    - Específico: SELECT nome, email FROM clientes WHERE idade > 25;
+    - Ordenado: SELECT nome FROM clientes ORDER BY nome ASC; -- Crescente
+    - Limitado: SELECT * FROM clientes LIMIT 2; -- Primeiros 2 registros
+    - Alias: SELECT nome AS 'Nome Completo' FROM clientes;
+  Detalhe: Asterisco (*) seleciona tudo, mas é melhor listar colunas em produção.
+
+- WHERE: Filtra resultados.
+  Sintaxe: WHERE condição;
+  Exemplos:
+    - Simples: SELECT * FROM clientes WHERE idade = 30;
+    - Múltiplo: SELECT * FROM clientes WHERE idade > 20 AND cidade = 'São Paulo';
+    - Intervalo: SELECT * FROM clientes WHERE idade BETWEEN 18 AND 35;
+    - Padrão: SELECT * FROM clientes WHERE nome LIKE 'J%'; -- Começa com J
+  Detalhe: Operadores: =, <>, >, <, >=, <=, AND, OR, NOT, LIKE, IN, BETWEEN.
+
+- ORDER BY: Ordena os resultados.
+  Sintaxe: ORDER BY coluna [ASC|DESC];
+  Exemplo: SELECT nome, idade FROM clientes ORDER BY idade DESC, nome ASC;
+  Detalhe: ASC (padrão) é crescente; DESC é decrescente.
+
+- GROUP BY: Agrupa dados para cálculos.
+  Sintaxe: GROUP BY coluna;
+  Exemplo: SELECT cidade, COUNT(*) AS total FROM clientes GROUP BY cidade;
+  Detalhe: Usado com funções como COUNT, SUM, AVG, MAX, MIN.
+
+- HAVING: Filtra grupos.
+  Sintaxe: HAVING condição;
+  Exemplo: SELECT cidade, COUNT(*) AS total FROM clientes GROUP BY cidade HAVING total > 2;
+  Detalhe: Similar a WHERE, mas aplica-se após GROUP BY.
+
+- JOIN: Combina dados de várias tabelas.
+  Sintaxe: SELECT colunas FROM tabela1 JOIN tabela2 ON condição;
+  Exemplos:
+    - INNER JOIN: SELECT c.nome, p.produto FROM clientes c INNER JOIN pedidos p ON c.id = p.cliente_id; -- Só linhas com correspondência
+    - LEFT JOIN: SELECT c.nome, p.produto FROM clientes c LEFT JOIN pedidos p ON c.id = p.cliente_id; -- Todos clientes, mesmo sem pedidos
+    - RIGHT JOIN: SELECT c.nome, p.produto FROM clientes c RIGHT JOIN pedidos p ON c.id = p.cliente_id; -- Todos pedidos, mesmo sem clientes
+    - FULL JOIN: SELECT c.nome, p.produto FROM clientes c FULL JOIN pedidos p ON c.id = p.cliente_id; -- Tudo (MySQL não suporta nativamente, simule com UNION)
+  Detalhe: Chave estrangeira (FK) geralmente usada no ON.
+
+- Subconsultas: Consulta dentro de outra.
+  Exemplo: SELECT nome FROM clientes WHERE id IN (SELECT cliente_id FROM pedidos WHERE valor > 100);
+  Detalhe: Pode ser usada com IN, EXISTS ou em SELECT/UPDATE.
+
+3.4. DCL - Controle de Acesso
+- GRANT: Concede permissões a usuários.
+  Sintaxe: GRANT privilégio ON objeto TO usuario;
+  Exemplo: GRANT SELECT, INSERT ON loja.clientes TO 'usuario'@'localhost';
+  Detalhe: Privilégios: ALL, SELECT, INSERT, UPDATE, DELETE, etc.
+
+- REVOKE: Remove permissões.
+  Sintaxe: REVOKE privilégio ON objeto FROM usuario;
+  Exemplo: REVOKE INSERT ON loja.clientes FROM 'usuario'@'localhost';
+  Detalhe: Reverso do GRANT.
+
+3.5. TCL - Controle de Transações
+- START TRANSACTION: Inicia uma transação.
+  Exemplo: START TRANSACTION;
+  Detalhe: Agrupa comandos para serem confirmados ou desfeitos.
+
+- COMMIT: Confirma a transação.
+  Exemplo: COMMIT;
+  Detalhe: Salva todas as alterações desde o START.
+
+- ROLLBACK: Desfaz a transação.
+  Exemplo: ROLLBACK;
+  Detalhe: Reverte ao estado antes do START.
+
+- SAVEPOINT: Define um ponto de restauração.
+  Exemplo: SAVEPOINT ponto1; ROLLBACK TO ponto1;
+  Detalhe: Permite desfazer parcialmente uma transação.
+
+3.6. Outros Comandos Úteis
+- DESCRIBE: Mostra a estrutura de uma tabela.
+  Sintaxe: DESCRIBE nome_tabela;
+  Exemplo: DESCRIBE clientes;
+  Detalhe: Sinônimo: SHOW COLUMNS FROM clientes;
+
+- SHOW: Exibe informações do banco.
+  Exemplos:
+    - SHOW DATABASES; -- Lista todos os bancos
+    - SHOW TABLES; -- Lista tabelas no banco ativo
+    - SHOW CREATE TABLE clientes; -- Mostra o comando CREATE da tabela
+  Detalhe: Útil para inspeção.
+
+- TRUNCATE: Esvazia uma tabela, mantendo a estrutura.
+  Sintaxe: TRUNCATE TABLE nome_tabela;
+  Exemplo: TRUNCATE TABLE clientes;
+  Detalhe: Mais rápido que DELETE, mas não reverte.
+
+- EXPLAIN: Analisa como uma consulta é executada.
+  Sintaxe: EXPLAIN SELECT * FROM clientes WHERE idade > 20;
+  Detalhe: Ajuda a otimizar consultas.
+
+4. Funções Comuns
+- Agregação:
+  - COUNT(*): Conta linhas.
+  - SUM(coluna): Soma valores.
+  - AVG(coluna): Média.
+  - MAX(coluna): Maior valor.
+  - MIN(coluna): Menor valor.
+- String:
+  - CONCAT('a', 'b'): Junta textos.
+  - UPPER('texto'): Converte para maiúsculas.
+  - LOWER('TEXTO'): Converte para minúsculas.
+- Data:
+  - NOW(): Data e hora atuais.
+  - DATE(coluna): Extrai só a data.
+
+5. Exemplo Completo
+CREATE TABLE produtos (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  nome VARCHAR(50),
+  preco DECIMAL(10,2)
+);
+INSERT INTO produtos (nome, preco) VALUES ('Camisa', 29.90), ('Calça', 59.90);
+SELECT nome, preco FROM produtos WHERE preco > 50 ORDER BY preco DESC;
+UPDATE produtos SET preco = 69.90 WHERE nome = 'Calça';
+DELETE FROM produtos WHERE id = 1;
+
+6. Conclusão
+Este guia cobre todos os comandos SQL usados no MySQL, com explicações detalhadas e exemplos. Pratique cada um para dominar a linguagem!
+
+Fim do guia.
